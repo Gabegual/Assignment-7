@@ -1,15 +1,17 @@
-package com.example.Bank_App_5.models;
+package com.example.Assignment_6.models;
 
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.StringTokenizer;
 
+import javax.persistence.Entity;
+
 //import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 //import com.fasterxml.jackson.annotation.JsonProperty;
 
-
+@Entity
 public class CDAccount extends BankAccount {
 		
 	//@JsonCreator

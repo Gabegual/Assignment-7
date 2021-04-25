@@ -1,4 +1,4 @@
-package com.example.Bank_App_5.Controllers;
+package com.example.Assignment_6.Controllers;
 
 import java.util.List;
 
@@ -10,17 +10,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.Bank_App_5.models.ExceedsCombinedBalanceLimitException;
-import com.example.Bank_App_5.exceptions.MissingFieldException;
-import com.example.Bank_App_5.models.NegativeAmountException;
-import com.example.Bank_App_5.exceptions.NotFoundException;
-import com.example.Bank_App_5.models.AccountHolder;
-import com.example.Bank_App_5.models.CDAccount;
-import com.example.Bank_App_5.models.CDAccountDTO;
-import com.example.Bank_App_5.models.CDOffering;
-import com.example.Bank_App_5.models.CheckingAccount;
-import com.example.Bank_App_5.models.MeritBank;
-import com.example.Bank_App_5.models.SavingsAccount;
+import com.example.Assignment_6.exceptions.MissingFieldException;
+import com.example.Assignment_6.exceptions.NotFoundException;
+import com.example.Assignment_6.models.AccountHolder;
+import com.example.Assignment_6.models.CDAccount;
+import com.example.Assignment_6.models.CDAccountDTO;
+import com.example.Assignment_6.models.CDOffering;
+import com.example.Assignment_6.models.CheckingAccount;
+import com.example.Assignment_6.models.ExceedsCombinedBalanceLimitException;
+import com.example.Assignment_6.models.MeritBank;
+import com.example.Assignment_6.models.NegativeAmountException;
+import com.example.Assignment_6.models.SavingsAccount;
 
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;

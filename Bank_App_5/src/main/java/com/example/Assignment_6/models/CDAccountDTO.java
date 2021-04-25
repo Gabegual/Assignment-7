@@ -1,4 +1,4 @@
-package com.example.Bank_App_5.models;
+package com.example.Assignment_6.models;
 
 public class CDAccountDTO {
 	private double balance;

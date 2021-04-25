@@ -1,16 +1,79 @@
-package com.example.Bank_App_5.models;
+package com.example.Assignment_6.models;
 
 import java.util.*;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@Entity
+@Table(name = "AccountHolder")
+@RequestMapping("AccountHolder")
 public class AccountHolder implements Comparable<AccountHolder> {
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(name = "user_id")
+    private int id;
+	private static int nextId=1;
+	
+	@NotBlank(message="First Name is mandatory")
+	private String firstName;
+	private String middleName;
+	
+	@NotBlank(message="Last Name is mandatory")
+	private String lastName;
+	
+	@NotBlank(message="SSN is mandatory")
+	@Size(min = 9)
+	private String ssn;
+	
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "user_id", referencedColumnName = "id")
+	private AccountHolderContactInfo accountHolderDataContactInfo;
+	
+	@OneToMany(cascade = CascadeType.ALL)
+	private List<CheckingAccount> checkingAccounts;
+	
+	@OneToMany(cascade = CascadeType.ALL)
+	private List<SavingsAccount> savingsAccount;
+	
+	@OneToMany(cascade = CascadeType.ALL)
+	private List<CDAccount> CDAccounts;
+	
+//	private int numberOfCheckings = 0;
+//	private int numberOfSavings = 0;
+//	private int numberOfCDAs = 0;
+	
+	
 	public  AccountHolder(String firstName, String middleName, String lastName, String ssn,int id) {
 		 this.firstName = firstName;
 		 this.middleName = middleName;
 		 this.lastName = lastName;
 		 this.ssn = ssn;
 		 this.id = nextId++;
+	}
+	
+	public AccountHolder () {
+		this.id = AccountHolder.nextId;
+		AccountHolder.nextId++;
+		
+		this.checkingAccounts = new ArrayList<>();
+		this.savingsAccount = new ArrayList<>();
+		this.CDAccounts = new ArrayList<>();
+		
 	}
 	
 	public int getId() {
@@ -193,15 +256,8 @@ public class AccountHolder implements Comparable<AccountHolder> {
 		return acString;
 	}
 
-	@NotBlank(message="First Name is mandatory")
-	private String firstName;
-	private String middleName;
-	@NotBlank(message="Last Name is mandatory")
-	private String lastName;
-	@NotBlank(message="SSN is mandatory")
-	private String ssn;
-    private int id;
-	private static int nextId=1;
+
+	
 	
 	//ArrayList is created for storing (1) all the savings account,(2) all the checking account,(3)all CDA account of an account holder
 	private ArrayList<SavingsAccount> savingsAccList = new ArrayList<SavingsAccount>();

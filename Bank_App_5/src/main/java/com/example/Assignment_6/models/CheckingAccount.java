@@ -1,8 +1,11 @@
-package com.example.Bank_App_5.models;
+package com.example.Assignment_6.models;
 
 import java.util.Date;
 import java.util.StringTokenizer;
 
+import javax.persistence.Entity;
+
+@Entity
 public class CheckingAccount extends BankAccount {
 	
 	public CheckingAccount(double balance) {
