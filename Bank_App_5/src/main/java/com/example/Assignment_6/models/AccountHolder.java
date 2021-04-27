@@ -1,266 +1,301 @@
 package com.example.Assignment_6.models;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-import javax.validation.constraints.NotBlank;
+import javax.persistence.*;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.hibernate.validator.constraints.NotBlank;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.Assignment_6.exceptions.*;
+
 @Entity
-@Table(name = "AccountHolder")
+@Table(name = "accountHolder")
+@RestController()
 @RequestMapping("AccountHolder")
-public class AccountHolder implements Comparable<AccountHolder> {
-	
+public class AccountHolder implements Comparable<AccountHolder>{
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "user_id")
-    private int id;
-	private static int nextId=1;
-	
-	@NotBlank(message="First Name is mandatory")
+	private static long id;
+
+	@NotBlank(message = "First Name is required")
 	private String firstName;
+
 	private String middleName;
-	
-	@NotBlank(message="Last Name is mandatory")
+
+	@NotBlank(message = "Last Name is required")
 	private String lastName;
-	
-	@NotBlank(message="SSN is mandatory")
+
 	@Size(min = 9)
+	@NotBlank(message = "SSN is required")
 	private String ssn;
-	
+
 	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "user_id", referencedColumnName = "id")
 	private AccountHolderContactInfo accountHolderDataContactInfo;
-	
+
 	@OneToMany(cascade = CascadeType.ALL)
 	private List<CheckingAccount> checkingAccounts;
-	
+
 	@OneToMany(cascade = CascadeType.ALL)
-	private List<SavingsAccount> savingsAccount;
-	
+	private List<SavingsAccount> savingsAccounts;
+
 	@OneToMany(cascade = CascadeType.ALL)
-	private List<CDAccount> CDAccounts;
+	private List<CDAccount> CDAccounts;	
 	
-//	private int numberOfCheckings = 0;
-//	private int numberOfSavings = 0;
-//	private int numberOfCDAs = 0;
-	
-	
-	public  AccountHolder(String firstName, String middleName, String lastName, String ssn,int id) {
-		 this.firstName = firstName;
-		 this.middleName = middleName;
-		 this.lastName = lastName;
-		 this.ssn = ssn;
-		 this.id = nextId++;
-	}
-	
-	public AccountHolder () {
-		this.id = AccountHolder.nextId;
-		AccountHolder.nextId++;
+// Declare a class that implements an interface 
+//public class AccountHolder implements Comparable{ 
+		//private static long ID = 1;	
 		
-		this.checkingAccounts = new ArrayList<>();
-		this.savingsAccount = new ArrayList<>();
-		this.CDAccounts = new ArrayList<>();
+	    // Class member variables 
+//		@NotNull(message="First name can not be Null")
+//	 	private String firstName;
+//		private String middleName;
+//	    @NotNull(message="Last name can not be Null")
+//	    private String lastName;
+//	    @NotNull
+//	    @Size(min=9, message="SNN can not be less than 9 characters")
+//	    private String ssn;
+	   // private CheckingAccount[] checkingAccounts;
+	    //private SavingsAccount[] savingsAccounts;
+	    //private CDAccount[] CDAccounts;
+	    
+	    // keep track of numbers of checking and saving accounts
+	    private int numberOfCheckings = 0;
+	    private int numberOfSavings = 0;
+	    private int numberOfCDAs = 0;
+	    
+
+	    // Used split method to split a string into an array 
+	    public static AccountHolder readFromString(String accountHolderData) {
+	    	String[] data = accountHolderData.split(",");
+	    	String firstName = data[0];
+	    	String middleName = data[1];
+	    	String lastName = data[2];
+	    	String ssn = data[3];
+	    	
+	    	return new AccountHolder(firstName, middleName, lastName, ssn);
+	    }
+	    
+	    public AccountHolder (){	
+	    	this.id = AccountHolder.id;
+	    	AccountHolder.id++;
+	    	// instantiate array of Checking
+	        this.checkingAccounts = new ArrayList<>();
+	        this.savingsAccounts = new ArrayList<>();
+	        this.CDAccounts = new ArrayList<>(); 
+	    }
+	    public AccountHolder(String firstName, String middleName, String lastName, String ssn){
+	    	this();
+	    	
+	        this.firstName = firstName;
+	        this.middleName = middleName;
+	        this.lastName = lastName;
+	        this.ssn = ssn;
+	    }
+	            
+      /*If combined balance limit is exceeded, throw ExceedsCombinedBalanceLimitException
+       * also add a deposit transaction with the opening balance */
+	    public boolean addCheckingAccount(CheckingAccount checkingAccount) throws ExceedsCombinedBalanceLimitException {
+	    	// check the opening account condition
+	    	if (checkingAccount == null) {
+				return false;
+			}
+			if (getCheckingBalance() + getSavingsBalance() + checkingAccount.getBalance() >= 250000) {
+				throw new ExceedsCombinedBalanceLimitException();
+			}
+			checkingAccounts.add(checkingAccount);
+			checkingAccount.setAccountNumber(this.id);
+			return true;
+	    }
+	    
+	    public List<CheckingAccount> getCheckingAccounts( ) {
+	    	return checkingAccounts;
+	    }
+	    
+	    public int getNumberOfCheckingAccounts() {
+	    	return this.checkingAccounts.size();
+	    }
+	    
+	    public double getCheckingBalance() {
+	    	double total = 0;
+	    	for (BankAccount account : checkingAccounts) {
+				total += account.getBalance();
+			}
+	    	
+	    	return total;
+	    }
+	    
+	    /*If combined balance limit is exceeded, throw ExceedsCombinedBalanceLimitException
+	     * also add a deposit transaction with the opening balance */
+	    public boolean addSavingsAccount(SavingsAccount savingsAccount) throws ExceedsCombinedBalanceLimitException{
+	    	// check if total amount is greater than 250, 000
+	    	if (savingsAccount == null) {
+				return false;
+			}
+			if (getCheckingBalance() + getSavingsBalance() + savingsAccount.getBalance() >= 250000) {
+				throw new ExceedsCombinedBalanceLimitException();
+			}
+			savingsAccounts.add(savingsAccount);
+			savingsAccount.setAccountNumber(this.id);
+			return true;
+	    }
+	    
+	    public List<SavingsAccount> getSavingsAccounts() {
+	    	return savingsAccounts;
+	    }
+	    
+	    public int getNumberOfSavingsAccounts() {
+	    	return this.savingsAccounts.size();
+	    }
+	    
+	    public double getSavingsBalance() {
+	    	double total = 0;
+	    	for (BankAccount account : savingsAccounts) {
+				total += account.getBalance();
+			}
+	    	
+	    	return total;
+	    }
+	    
+	    //Should also add a deposit transaction with the opening balance
+	    public boolean addCDAccount(CDAccount cdAccount) throws ExceedsFraudSuspicionLimitException {
+	    	if (cdAccount == null) {
+				return false;
+			}
+			CDAccounts.add(cdAccount);
+			cdAccount.setAccountNumber(this.id);
+			return true;
+	    }
+	    
+	    public int getNumberOfCDAccounts() {
+	    	return this.CDAccounts.size();
+	    }
+	    
+	    public List<CDAccount> getCDAccounts() {
+	    	return CDAccounts;
+	    }
+	    
+	    public double getCDBalance() {
+	    	double total = 0;
+	    	for (BankAccount account : CDAccounts) {
+				total += account.getBalance();
+			}
+	    	
+	    	return total;
+	    }
+	    
+	    public double getCombinedBalance() {
+	    	//return this.getCDBalance() + this.getCheckingBalance() + this.getSavingsBalance();
+	    	return this.getCheckingBalance() + this.getSavingsBalance() + this.getCDBalance();
+	    }
+	    
+	    
+	    // This method validates that the total amount of combined balance and deposit is less than $250,000.00
+	    private boolean canOpen(double deposit) throws ExceedsCombinedBalanceLimitException {
+	    	if (this.getCombinedBalance() < 250000.00) {
+	    		return true;
+	    	} else {
+	    		System.out.println("Total is over 250,000. Can not open a new account");
+	    		throw new ExceedsCombinedBalanceLimitException();
+	    	}
+	    }
+
+//		//@Override
+//		public int compareTo(Object o) {
+//			AccountHolder acc = (AccountHolder) o;
+//			if (this.getCombinedBalance() < acc.getCombinedBalance())
+//				return -1;
+//			else if (this.getCombinedBalance() > acc.getCombinedBalance())
+//				return 1;
+//			else
+//				return 0;
+//		}
 		
-	}
-	
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
-
-	public String getFirstName() {
-		return this.firstName;
-	}
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
-	public String getMiddleName() {
-		return this.middleName;
-	}
-	public void setMiddleName(String middleName) {
-		this.middleName = middleName;
-	}
-	public String getLastName() {
-		return this.lastName;
-	}
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
-	public String getSSN() {
-		return ssn;
-	}
-	public void setSSN(String ssn) {
-		this.ssn = ssn;
-	}
-	public CheckingAccount addCheckingAccount(double openingBalance) {
-		CheckingAccount checking=null;
-		if((getSavingsBalance()+getCheckingBalance()+openingBalance)<250000) {
-			checking= new CheckingAccount(openingBalance);
-			this.checkingAccList.add(checking);
-		} 
-		return checking;
-	}
-	public CheckingAccount addCheckingAccount(CheckingAccount checkingAccount) {
-		if((getSavingsBalance()+getCheckingBalance()+checkingAccount.getBalance())<250000) {
-			this.checkingAccList.add(checkingAccount);
-			return checkingAccount;
-		} else {
+	    /*
+		// find the account has that ID in this account holder and return that account, if can not find, return null
+		public BankAccount findAccount(long ID) {
+			for (int i = 0; i < this.numberOfCheckings; i++) {
+				if (this.checkingAccounts[i].getAccountNumber() == ID) {
+					return this.checkingAccounts[i];
+				}
+			}
+			
+			for (int j = 0; j < this.numberOfSavings; j++) {
+				if (this.savingsAccounts[j].getAccountNumber() == ID) {
+					return this.savingsAccounts[j];
+				}
+			}
+			
+			for (int j = 0; j < this.numberOfCDAs; j++) {
+				if (this.CDAccounts[j].getAccountNumber() == ID) {
+					return this.CDAccounts[j];
+				}
+			}
+			
 			return null;
+		}*/
+				
+		// extend account array capacity of 
+						 
+	    public String getFirstName() {
+	        return firstName;
+	    }
+	    public void setFirstName(String firstName) {
+	        this.firstName = firstName;
+	    }
+	    public String getMiddleName() {
+	        return middleName;
+	    }
+	    public void setMiddleName(String middleName) {
+	        this.middleName = middleName;
+	    }
+	    public String getLastName() {
+	        return lastName;
+	    }
+	    public void setLastname(String lastName) {
+	        this.lastName = lastName;
+	    }
+	    public String getSSN() {
+	        return ssn;
+	    }
+	    public void setSSN(String ssn) {
+	        this.ssn = ssn;
+	    }
+	    
+	    public long getId() {
+			return id;
 		}
-	}
-	public CheckingAccount[] getCheckingAccounts() {
-		CheckingAccount[] checking = checkingAccList.toArray(new CheckingAccount[0]);
-		return checking;
-	}
-	public CheckingAccount getCheckingAccountById(int accountHolderId) {
-		
-		return checkingAccList.get(accountHolderId - 1);
-	}
-	
-	//directly the size of arraylist is calculated.
-	public int getNumberOfCheckingAccounts() {
-		int numberOfCheckingAccounts = checkingAccList.size();
-		return numberOfCheckingAccounts;
-	}
-	
-	//adds each checking account of the account holder from the array of checking accounts
-	//to get the checking account array we call the already defined function getCheckingAccounts()
-	public double getCheckingBalance() {
-		CheckingAccount[] checkingArr = getCheckingAccounts();
-		double checkingTotal = 0;
-		for(int i=0;i<checkingArr.length;i++) {
-			checkingTotal+=checkingArr[i].getBalance();
-		}
-		
-		return checkingTotal;
-	}
-	
-	//add a new savings account with a given opening balance if combined balance is less than $250,000
-	public SavingsAccount addSavingsAccount(double openingBalance) {
-		SavingsAccount savings = null;
-		if((getSavingsBalance()+getCheckingBalance()+openingBalance)<250000) {
-			savings=new SavingsAccount(openingBalance);
-			this.savingsAccList.add(savings);
-		}
-		return savings;
-	}
-	
-	//add a new savings account if combined balance is less than $250,000
-	public SavingsAccount addSavingsAccount(SavingsAccount savingsAccount) {
-		if((getSavingsBalance()+getCheckingBalance()+savingsAccount.getBalance())<250000) {
-			this.savingsAccList.add(savingsAccount);
-			return savingsAccount;						                          //returning savingsAccount as the return type expected is object. 
-		} else {
-			return null;
-		}
-	}
-	
-	public SavingsAccount[] getSavingsAccounts() {
-		SavingsAccount[] savings = savingsAccList.toArray(new SavingsAccount[0]); //converting to array since, return type, an array is expected.
-		return savings;
-	}
-	
-	//calculates the length of the savings account array, getSavingsAccounts() AND returns the array of savings account when invoked
-	public int getNumberOfSavingsAccounts() {
-		int numberOfSavingsAccount= (getSavingsAccounts()).length;
-		return numberOfSavingsAccount;
-	}
-	
-	public double getSavingsBalance() {
-		SavingsAccount[] savingArr=getSavingsAccounts();
-		double savingsTotal=0;
-		for(int i=0;i<savingArr.length;i++) {
-			savingsTotal+= (savingArr[i].getBalance());
+
+		public void setId(int id) {
+			this.id = id;
 		}
 		
-		return savingsTotal;
-	}
-	
-	public CDAccount addCDAccount(CDOffering offering, double openingBalance) {
-		
-		CDAccount cd=new CDAccount(offering,openingBalance);
-		this.cdAccList.add(cd);
-		return cd;
-	}
-	
-	public CDAccount addCDAccount(CDAccount cdAccount) {
-		this.cdAccList.add(cdAccount);
-		return cdAccount;
-	}
-	
-	public CDAccount[] getCDAccounts() {
-		CDAccount[] cd = cdAccList.toArray(new CDAccount[0]);
-		return cd;
-	}
-	
-	public int getNumberOfCDAccounts() {
-		int numberOfCDAccounts= cdAccList.size();
-		return numberOfCDAccounts;
-	}
-	
-	public double getCDBalance() {
-		double cdTotal=0;
-		CDAccount[] cdArr= getCDAccounts();
-		for(int i=0;i<cdArr.length;i++) {
-			cdTotal+= cdArr[i].getBalance();
+		public AccountHolderContactInfo getAccountHolderDataContactInfo() {
+			return accountHolderDataContactInfo;
 		}
-		System.out.println("cd:"+cdTotal);
-		return cdTotal;
-	}
-	
-	public double getCombinedBalance() {
-		return (getSavingsBalance()+getCheckingBalance()+getCDBalance());
-	}
-	
-	public int compareTo(AccountHolder ac) {
-		if(this.getCombinedBalance()>ac.getCombinedBalance()) {
-			return 1;
-		} else {
-			return -1;
+
+		public void setAccountHolderDataContactInfo(AccountHolderContactInfo accountHolderDataContactInfo) {
+			this.accountHolderDataContactInfo = accountHolderDataContactInfo;
 		}
-	}
-	
-	public static AccountHolder readFromString(String accountHolderData) throws java.lang.Exception{
-		StringTokenizer tokenizer = new StringTokenizer(accountHolderData, ",");
 
-		String firstName = tokenizer.nextToken();
-		String middleName = "";
-		if (tokenizer.countTokens() == 4) {
-			middleName = tokenizer.nextToken();
+		@Override
+		public int compareTo(AccountHolder o) {
+			// TODO Auto-generated method stub
+			return 0;
 		}
-		String lastName = tokenizer.nextToken();
-		String ssn = tokenizer.nextToken();
-
-		AccountHolder account = new AccountHolder(firstName, middleName, lastName, ssn,nextId);
-		return account;
-	}
-	
-	public String writeToString() {
-		String acString = getFirstName()+","+getMiddleName()+","+getLastName()+","+getSSN();
-		return acString;
-	}
-
-
-	
-	
-	//ArrayList is created for storing (1) all the savings account,(2) all the checking account,(3)all CDA account of an account holder
-	private ArrayList<SavingsAccount> savingsAccList = new ArrayList<SavingsAccount>();
-	private ArrayList<CheckingAccount> checkingAccList = new ArrayList<CheckingAccount>();
-	private ArrayList<CDAccount> cdAccList = new ArrayList<CDAccount>();
 }

@@ -1,4 +1,4 @@
-package com.example.Assignment_6.models;
+package com.example.Assignment_6.exceptions;
 
 public class ExceedsFraudSuspicionLimitException extends Exception {
 	

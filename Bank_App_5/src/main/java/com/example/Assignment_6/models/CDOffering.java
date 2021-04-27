@@ -1,76 +1,51 @@
 package com.example.Assignment_6.models;
 
+import javax.validation.constraints.DecimalMax;
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 public class CDOffering {
-	/*public CDOffering(int term, double interestRate) {
-		this.term = term;
-		this.interestRate = interestRate;
+	
+	@NotNull
+	@Min(value = 1, message = " term must be >")
+	private int term;
+	public double interestRate;
+	
+	public CDOffering() {
 		
-	}*/
+	}
+	
+	static CDOffering readFromString(String CDOfferingDataString) {
+		String[] data = CDOfferingDataString.split(",");
+		int term = Integer.parseInt(data[0]);
+		double interestRate = Double.parseDouble(data[1]);
+		
+		return new CDOffering(term, interestRate);
+	}
+	
 	public CDOffering(int term, double interestRate) {
 		this.term = term;
 		this.interestRate = interestRate;
-		this.id=nextId++;
-	}
-	
-	
-	public CDOffering(int id) {
-		CDOffering cd = MeritBank.getCDOfferingById(id);
-		this.term = cd.term;
-		this.interestRate = cd.interestRate;
-		this.id=cd.id;
+		
 	}
 
 	public int getTerm() {
-		return this.term;
+		return term;
 	}
-	
-	
+
+	public void setTerm(int years) {
+		this.term = years;
+	}
+
 	public double getInterestRate() {
-		return this.interestRate;
+		return interestRate;
+	}
+
+	public void setInterestRate(double interestRate) {
+		this.interestRate = interestRate;
 	}
 	
 	
-	
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
-	
-
-
-	public static CDOffering readFromString(String cdOfferingDataString) throws java.lang.NumberFormatException{
-		//expecting like this: 1,0.018
-		CDOffering cd = null;
-
-		if(cdOfferingDataString.indexOf(',')!=-1) {
-			int term = Integer.parseInt(cdOfferingDataString.substring(0, cdOfferingDataString.indexOf(',')));  
-			double rate = Double.parseDouble(cdOfferingDataString.substring(cdOfferingDataString.indexOf(',')+1));
-			cd = new CDOffering(term,rate);
-		} 
-		else {
-			throw new NumberFormatException();
-		}
-
-		return cd;
-	}
-
-	
-
-	public String writeToString() {
-		String cdString = this.getTerm() + "," + this.getInterestRate();
-		return cdString;
-	}
-	//CDOffering cd = new CDOffering(getTerm(),getInterestRate());
-
-	private int term;
-	
-	private double interestRate;
-	private int id;
-	private static int nextId=1;
-
 }

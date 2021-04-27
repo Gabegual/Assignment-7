@@ -1,90 +1,83 @@
 package com.example.Assignment_6.models;
 
 import java.text.Format;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.StringTokenizer;
 
 import javax.persistence.Entity;
+import javax.validation.constraints.DecimalMax;
+import javax.validation.constraints.DecimalMin;
 
 //import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 //import com.fasterxml.jackson.annotation.JsonProperty;
+//import com.sun.el.parser.ParseException;
 
 @Entity
 public class CDAccount extends BankAccount {
-		
-	//@JsonCreator
-	public CDAccount( CDOffering cdOffering,  double balance) {
-		
-		super(MeritBank.getNextAccountNumber(), balance,cdOffering.getInterestRate(),new Date());
-		
-		this.cdOffering=cdOffering;
+	
+	CDOffering offerings;
+	int term;
+	public CDAccount() {
+		super();
 	}
 	
-
-
-	public CDAccount(long accountNumber, double balance, double interestRate,java.util.Date accountOpenedOn,int term) {
-		super(accountNumber,balance,interestRate,accountOpenedOn);
-		
-		this.cdOffering = new CDOffering(term, interestRate);
+	public void setTerm(int term) {
+		this.term = term;
 		
 	}
 	
-	public double getInterestRate() {
-		return this.cdOffering.getInterestRate();
+	public CDAccount(CDOffering offering, double openingBalance) {
+		super(openingBalance, offering.getInterestRate());
+		this.offerings = offering;
+		this.term = offering.getTerm();
 	}
-	@JsonIgnore
+	/*
+	 * @param accountNumber
+	 * @param balance
+	 * @param interestRate
+	 * @param term
+	 */
+	
+	public CDAccount(Long accountNumber, Double balance,Double interestRate, Date openedOn, int term) {
+			super(accountNumber, balance, interestRate, openedOn);
+			this.term = term;
+	}
+	
+	public static CDAccount readFromString(String accountData) throws ParseException{
+		try {
+			String[] temp = accountData.split(",");
+			Date date = new SimpleDateFormat("dd/MM/yyyy").parse(temp[3]);
+			CDAccount newAccount =  new CDAccount(Long.valueOf(temp[0]), Double.valueOf(temp[1]),Double.valueOf(temp[2]), date, Integer.valueOf(temp[4]));
+			return newAccount;
+		}
+		catch(Exception exception) {
+			throw new NumberFormatException();
+		}
+	
+	}
+	
 	public int getTerm() {
-		return this.cdOffering.getTerm();
+		return term;
 	}
 	
-	@JsonIgnore
-	public int getId() {
-		return this.cdOffering.getId();
-	}
-	@JsonIgnore
-	public java.util.Date getStartDate(){
-		Date date=new Date();
-		return date;
-	}
+	@Override
 	public boolean withdraw(double amount) {
 		return false;
 	}
-	public boolean deposit(double amount) {
-		return false;
-	}
-	public double futureValue() {
-		
-		double futureVal = getBalance() * Math.pow((1+this.getInterestRate()),this.getTerm());
-		return futureVal;
-	}
-	public static CDAccount readFromString(String accountData) throws  java.lang.NumberFormatException{
-		StringTokenizer token = new StringTokenizer(accountData, ",");
-		int numAccount = Integer.parseInt(token.nextToken());
-		long balance = Long.parseLong(token.nextToken());
-		double rate = Double.parseDouble(token.nextToken());
-		
-		Date date = new Date(token.nextToken());
-		Format f = new SimpleDateFormat("dd/MM/yy");
-		String strDate = f.format(date);
-		 date = new Date(strDate);
-		
-		 int term = Integer.parseInt(token.nextToken());
-
-		CDAccount cdAcc = new CDAccount(numAccount, balance, rate, date, term);
-		return cdAcc;
-	}
+	
 	public String writeToString() {
-		String cdString = getAccountNumber()+","+getBalance()+","+getInterestRate()+","+getStartDate()+","+getTerm(); 
-		return cdString;
+		StringBuilder toString = new StringBuilder();
+		toString.append(super.writeToString()).append(",");
+		toString.append(term);
+		return toString.toString();
 	}
 	
-	
-	private  CDOffering cdOffering;
-	
-	public CDOffering getCDOffering() {
-		return cdOffering;
-	}
 
+	public double futureValue() {	
+		return futureValue(term);
+	}
+	
 }

@@ -1,22 +1,28 @@
-//package com.example.Assignment_6.models;
-//package com.example.Bank_App_5.models;
-//
-//import java.util.ArrayList;
-//import java.util.List;
-//
-//public class FraudQueue {
-//	private ArrayList<Transaction> fraudTrans = new ArrayList<Transaction>();
-//	protected FraudQueue(){
-//		
-//		
-//	}
-//	
-//	public void addTransaction(Transaction transaction) {
-//		fraudTrans.add(transaction);
-//	}
-//	
-//	List<Transaction> getTransaction(){
-//		return fraudTrans;
-//	}
-//
-//}
+package com.example.Assignment_6.models;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
+
+public class FraudQueue {
+	
+	private LinkedList<Transaction> transactions;
+	
+	public FraudQueue() {
+		transactions = new LinkedList<>();
+	}
+	
+	public void addTransaction(Transaction transaction) {
+		transactions.push(transaction);
+	}
+	
+	public Transaction getTransaction() {
+		return transactions.pop();
+	}
+	
+	public int getSize() {
+		return transactions.size();
+	}
+}
+
