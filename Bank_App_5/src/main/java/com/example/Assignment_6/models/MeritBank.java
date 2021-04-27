@@ -6,223 +6,386 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.Format;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.example.Assignment_6.exceptions.ExceedsAvailableBalanceException;
+import com.example.Assignment_6.exceptions.ExceedsFraudSuspicionLimitException;
+
 public class MeritBank {
 	
+	private static long accIndex = 0;
+	private static List<AccountHolder> accountHolders = new ArrayList<>();
+	private static List<CDOffering> cdOfferings = new ArrayList<>();
+	
+	private static int numbOfAccountHolder = 0;
+	public static FraudQueue fraudQueue = new FraudQueue();
+	
 	public static void addAccountHolder(AccountHolder accountHolder) {
-		accHolderList.add(accountHolder);
-	}
-	public static AccountHolder[] getAccountHolders() {
-		AccountHolder[] accHolderArr = accHolderList.toArray(new AccountHolder[0]);
-		return accHolderArr;
-	}
-	public static AccountHolder getAccountHolderById(int accountHolderId) {
+		accountHolders.add(accountHolder);
 		
-		return accHolderList.get(accountHolderId - 1);
 	}
 	
-	public static CDOffering[] getCDOfferings() {
-		return offerings;
+	public static void addCDOffering(CDOffering offering) {
+		cdOfferings.add(offering);
 	}
-	public static CDOffering getCDOfferingById(int cdOfferingId) {
-		return offeringsList.get(cdOfferingId-1);
+	
+	public static AccountHolder getAccountHolder(long id) {
+		for (AccountHolder account : MeritBank.accountHolders) {
+			if (account == null) {
+				return null;
+			}
+			if (account.getId() == id) {
+				return account;
+			}
+		}
+		
+		return null;
+		
+		
 	}
+	public static BankAccount findAccount(long ID) {
+		for (AccountHolder accountHolder : accountHolders) {
+			for (BankAccount account : accountHolder.getCheckingAccounts()) {
+				if (account.getAccountNumber() == ID) {
+					return account;
+				}
+			}
+			for (BankAccount account : accountHolder.getSavingsAccounts()) {
+				if (account.getAccountNumber() == ID) {
+					return account;
+				}
+			}
+			for (BankAccount account : accountHolder.getCDAccounts()) {
+				if (account.getAccountNumber() == ID) {
+					return account;
+				}
+			}
+		}
+		return null;
+	}
+	
+	public static String formatDate(Date date) {
+		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+		return formatter.format(date);
+	}
+	
+	public static String decimalFormat(double numb) {
+		DecimalFormat df = new DecimalFormat("#.####");
+		return df.format(numb);
+	}
+	
+	public static String formatNumber(double d) {
+	    if(d == (int) d)
+	        return String.format("%d",(int)d);
+	    else
+	        return String.format("%s",d);
+	}
+	
+	private static void readFraudQueue(BufferedReader reader) throws IOException, ParseException {
+		int pendingNum = Integer.parseInt(reader.readLine());
+	
+		for (int i= 0; i < pendingNum; i++) {
+			MeritBank.fraudQueue.addTransaction(readTransactionType(reader.readLine()));
+		}
+	}
+	
+	private static Transaction readTransactionType(String line) throws ParseException {
+		String[] datas = line.split(",");
+		
+		// Create a date formatter
+		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+		
+		int sourceID = Integer.parseInt(datas[0]);
+		int targetID = Integer.parseInt(datas[1]);
+		BankAccount targetAcc = MeritBank.findAccount(targetID);
+		double amount = Integer.parseInt(datas[2]);
+		Date date = formatter.parse(datas[3]);
+		
+		// if this is not a transfer transaction
+		if (sourceID != -1) {
+			if (amount >= 0) {
+				return new DepositTransaction(targetAcc, amount, date);
+			} else {
+				return new WithdrawTransaction(targetAcc, amount, date);
+			}
+		} else {
+			// if this is a transfer transaction
+			BankAccount sourceAcc = MeritBank.findAccount(sourceID);
+			return new TransferTransaction(sourceAcc, targetAcc, amount, date);
+		}
+	}
+	
+	private static void readTransactions(BufferedReader reader, BankAccount acc) throws IOException, ParseException, 
+	  ExceedsFraudSuspicionLimitException, NegativeAmountException, ExceedsAvailableBalanceException {
+		int numOfTransaction = Integer.valueOf(reader.readLine()); // number of transactions
+		
+		for (int i = 0; i < numOfTransaction; i++) {
+			String line = reader.readLine();
+			String[] datas = line.split(",");
+			
+			// Create a date formatter
+			SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+			
+			int sourceID = Integer.parseInt(datas[0]);
+			int targetID = Integer.parseInt(datas[1]);
+			double amount = Double.parseDouble(datas[2]);
+			Date date = formatter.parse(datas[3]);
+			
+			// if this is not a transfer transaction
+			if (sourceID != -1) {
+				if (amount >= 0) {
+					acc.addTransaction(new DepositTransaction(acc, amount, date));
+				} else {
+					acc.addTransaction(new WithdrawTransaction(acc, amount, date));
+				}
+			} else {
+				// if this is a transfer transaction
+				BankAccount sourceAcc = MeritBank.findAccount(sourceID);
+				acc.addTransaction(new TransferTransaction(sourceAcc, acc, amount, date));
+			}
+		}
+	}
+	
+	private static String addSavingData(AccountHolder acc) {
+		StringBuilder data = new StringBuilder();
+		int numbOfSavings = 0;
+		List<SavingsAccount> savings = acc.getSavingsAccounts();
+		
+		for (BankAccount account : savings) {
+			if (account == null) {
+				break;
+			}
+			
+			// increase number of checking
+			numbOfSavings++;
+			
+			data.append(account.writeToString() + "\n");
+		}
+		
+		return numbOfSavings + "\n" + data.toString();
+	}
+	/*
+	// sort account from small to large
+	public static AccountHolder[] sortAccountHolders() {
+		AccountHolder[] accountHolder = MeritBank.accountHolders;
+		
+		int n = accountHolder.length; 
+        for (int i = 0; i < n-1; i++) {
+            for (int j = 0; j < n-i-1; j++) 
+                if (accountHolder[j].compareTo(accountHolder[j+1]) > 0) 
+                { 
+                    // swap accountHolder[j+1] and accountHolder[i] 
+                    AccountHolder temp = accountHolder[j]; 
+                    accountHolder[j] = accountHolder[j+1]; 
+                    accountHolder[j+1] = temp; 
+                } 
+        }
+        
+        return accountHolder;
+	}*/
+	
+	private static String addCDData(AccountHolder acc) {
+		StringBuilder data = new StringBuilder();
+		int numbOfCDs = 0;
+		List<CDAccount> cds = acc.getCDAccounts();
+		
+		for (BankAccount account : cds) {
+			if (account == null) {
+				break;
+			}
+			
+			// increase num of checking
+			numbOfCDs++;
+			
+			data.append(account.writeToString() + "\n");
+		}
+		
+		return numbOfCDs + "\n" + data.toString();
+	}
+	
+	/*
+	 * convert all the needed checking account information to String and return
+	 */
+	private static String addCheckingData(AccountHolder acc) {
+		StringBuilder data = new StringBuilder();
+		int numbOfCheckings = 0;
+		List<CheckingAccount> checkings = acc.getCheckingAccounts();
+		
+		for (BankAccount account : checkings) {
+			if (account == null) {
+				break;
+			}
+			
+			// increase num of checking
+			numbOfCheckings++;
+			
+			data.append(account.writeToString() + "\n");
+		}
+		
+		return numbOfCheckings + "\n" + data.toString();
+	}
+	
+	public static List<AccountHolder> getAccountHolders() {
+		return accountHolders;
+	}
+	
+	public static List<CDOffering> getCDOfferings() {
+		return cdOfferings;
+	}
+	
 	public static CDOffering getBestCDOffering(double depositAmount) {
-		//CDOffering[] offering= getCDOfferings();
-		CDOffering bestCDOffer = offerings[0];
-		for(int i=1; i<offerings.length;i++) {
-			double futureVal=futureValue(depositAmount,offerings[i].getInterestRate(),offerings[i].getTerm());
-			double bestFutureVal = futureValue(depositAmount,bestCDOffer.getInterestRate(),bestCDOffer.getTerm());
-			if(futureVal>bestFutureVal) {
-				bestFutureVal=futureVal;
-				bestCDOffer=offerings[i];
+		double highestYield = 0;
+		CDOffering best = null; 		// position of the best offerings in the CDOffering array
+		
+		if(cdOfferings.size() == 0) {
+			return null;
+		}
+		for(CDOffering cdOffering : cdOfferings) {
+			if(cdOffering.getInterestRate() > highestYield) {
+				best = cdOffering;
+				highestYield = cdOffering.getInterestRate();
 			}
 		}
-		return bestCDOffer;
+		return best;
+		
 	}
+	
 	public static CDOffering getSecondBestCDOffering(double depositAmount) {
+
+		double secondBestRate = 0;
+		CDOffering secondBestI = null; // second best offer index
+		CDOffering bestI = getBestCDOffering(depositAmount);
+		double secondBestYield = 0;
+		double tempYield = 0;
 		
-		CDOffering secondBestOffer = null;
-		for(int i=1;i<offerings.length;i++) {
-			for(int j=i+1;j<offerings.length;j++) {
-				double bestFutureVal=futureValue(depositAmount,offerings[i].getInterestRate(),offerings[i].getTerm());
-				double futureVal = futureValue(depositAmount,offerings[j].getInterestRate(),offerings[j].getTerm());
-			//double secondBestFutureVal = futureValue(depositAmount,secondBestOffer.getInterestRate(),secondBestOffer.getTerm());
-				CDOffering[] temp=new CDOffering[1];
-				if(futureVal>bestFutureVal) {
-					temp[0] = offerings[i];
-					offerings[i]=offerings[j];
-					offerings[j]=temp[0];
-				}	
+		if(cdOfferings.size() <= 1) { 
+			return null; 
+		}
+		for(CDOffering cdOffering : cdOfferings) {
+			if(cdOffering == bestI) {
+				continue; 
+			}
+			if(cdOffering.getInterestRate() > secondBestRate) {
+				secondBestI = cdOffering;
+				secondBestRate = cdOffering.getInterestRate();
+			}
+			
+		}
+		return secondBestI;
+	}
+	
+	public static void clearCDOfferings() {
+		MeritBank.cdOfferings = null;
+	}
+	
+	public static void setCDOfferings(List<CDOffering> offerings) {
+		for(CDOffering offering : offerings) {
+			cdOfferings.add(offering);
+		}
+	}
+	
+	public static long getNextAccountNumber() {
+		// get back later
+		MeritBank.accIndex++;
+		return accIndex;
+	}
+	
+	public static void setNextAccountNumber(long nextAccountNumb) {
+		MeritBank.accIndex = nextAccountNumb - 1;
+	}
+	
+	public static double totalBalances() {
+		double total = 0.0;
+		
+		// total all balances (checking and saving) in every account		
+		for(AccountHolder acHolder : accountHolders) {
+			for(BankAccount account : acHolder.getCheckingAccounts()) {
+				total += account.getBalance();
+			}
+			for(BankAccount account : acHolder.getSavingsAccounts()) {
+				total += account.getBalance();
+			}
+			for(BankAccount account: acHolder.getCDAccounts()) {
+				total += account.getBalance();
 			}
 		}
-		secondBestOffer=offerings[1];
-		return secondBestOffer;
+		return total;
 	}
-	public static void clearCDOfferings() {
-		offerings=null;	
-	}
-	public static void setCDOfferings(CDOffering[] offerings) {
-		MeritBank.offerings=offerings;                          //cannot access static variable with this keyword
-		
-	}
-	public static long getNextAccountNumber() {
-		
-		return nextAccNumber++;
-	}
-	public static Date getDate() {
-		Date date = new Date();
-		Format f = new SimpleDateFormat("dd/MM/yy");
-		String strDate = f.format(date);
-		date = new Date(strDate);
-		return date;
-	}
-	public static double totalBalances() {
-		AccountHolder[] accountHolderArr= getAccountHolders();
-		double totalBalance=0;
-		for(int i=0;i<accountHolderArr.length;i++) {
-			totalBalance+=accountHolderArr[i].getSavingsBalance()+accountHolderArr[i].getCheckingBalance()+accountHolderArr[i].getCDBalance();
+	
+	public static double recursionFutureValue(double amount, int years, double interestRate) {
+		if (years == 0) {
+			return amount;
+		} else {
+			return amount * (1 + interestRate) * recursionFutureValue(1, years - 1, interestRate);
 		}
-		return totalBalance;
-	}
 		
+	}
+
 	public static double futureValue(double presentValue, double interestRate, int term) {
-		double futureVal = presentValue * Math.pow((1+interestRate),term);
+		double futureVal = presentValue * Math.pow(1 + interestRate, term);
+		
 		return futureVal;
 	}
-	public static void setNextAccountNumber(long nextAccountNumber) {
-		nextAccNumber = nextAccountNumber;
-	}	
-	public static boolean readFromFile(String fileName)  {
-		try {
-			BufferedReader rd = new BufferedReader(new FileReader(fileName));
-			String line = rd.readLine(); 											//reads the first line
-			setNextAccountNumber(Long.parseLong(line));
-			 line = rd.readLine();													//reads the 2nd line
-			 int cdLength = Integer.parseInt(line);
-			 CDOffering[] cd = new CDOffering[cdLength];							//makes an array for CDOffering
-			 for(int i=0; i<cdLength;i++) {											//length of array was read from 2nd line
-				 line=rd.readLine();
-				 //cd[i]=CDOffering.readFromString(line);									//stores the CDOffering with (term and rate) in each index
-			 }
-			 setCDOfferings(cd);		//requirement:"when reading from file, the data should overwrite the MeritBank data such that previous data no longer exists, only the data read from the file should exist"
-			 line=rd.readLine();
-			 int accHolderLength=Integer.parseInt(line);
-			 accHolderList = new ArrayList<AccountHolder>();//the accHolderList now points to the newly created arrayList of accounts which is read from the file.//automatically the pointer has now changed from previous lists to the new arrayList.
-			 for (int i = 0; i < accHolderLength; i++) {
-					line = rd.readLine();
-					//System.out.println("AH Read"+line);
-					AccountHolder a = AccountHolder.readFromString(line);
-					
-					accHolderList.add(a);	
-					line = rd.readLine();
-					int numOfChecking = Integer.parseInt(line);
-					if (numOfChecking != 0) {
-						for (int j = 0; j < numOfChecking; j++) {
-							
-							line = rd.readLine();
-							//System.out.println("CA Read"+line);
-							CheckingAccount ch =CheckingAccount.readFromString(line);
-							a.addCheckingAccount(ch);
-						}
-					}
-					line = rd.readLine();
-					int numOfSavings = Integer.parseInt(line);
-					if (numOfSavings != 0) {
-						for (int j = 0; j < numOfSavings; j++) {
-							
-							line = rd.readLine();
-							//System.out.println("SA Read"+line);
-							SavingsAccount sv = SavingsAccount.readFromString(line);
-							a.addSavingsAccount(sv);
-						}
-					}
-					line = rd.readLine();
-					int numOfCD = Integer.parseInt(line);
-					if (numOfCD != 0) {
-						for (int j = 0; j < numOfCD; j++) {
-							
-							line = rd.readLine();
-							CDAccount cdAcc = CDAccount.readFromString(line);
-							a.addCDAccount(cdAcc);
-
-							//a.addCDAccount(offerings[j], balance);
-						}
-					}
-			}
-			rd.close();
-			return true;
-		} catch(Exception e) {
-			return false;
+	
+	// add transaction to an account
+	// -- needed to be fixed, use instanceof, calling bankaccount.withdraw, deposit..etc
+	public static boolean processTransaction(Transaction transaction) throws NegativeAmountException, ExceedsFraudSuspicionLimitException, 
+	ExceedsAvailableBalanceException {
+		double amount = transaction.getAmount();
+		BankAccount source = transaction.getSourceAccount();
+		BankAccount target = transaction.getTargetAccount();
+		
+		// if amount > 1000, add to fraud queue
+		if (Math.abs(transaction.getAmount()) > 1000) {
+			MeritBank.fraudQueue.addTransaction(transaction);
+			throw new ExceedsFraudSuspicionLimitException();
 		}
-	}
-	
-	public static boolean writeToFile(String fileName) {
-		try{	
-			PrintWriter wr = new PrintWriter(new FileWriter(fileName));
-			//wr.print("");
-			wr.println(nextAccNumber);
-			wr.println(offerings.length);
-			for(int i=0;i<offerings.length;i++) {
-				wr.println(offerings[i].writeToString());
-			}
-			wr.println(accHolderList.size());
-			for(int i=0;i<accHolderList.size();i++) {
-				AccountHolder accInfo=accHolderList.get(i);
-				wr.println(accInfo.writeToString());
-				int numOfCheckings = accInfo.getNumberOfCheckingAccounts();
-				wr.println(numOfCheckings);
-				if(numOfCheckings!=0) {
-					CheckingAccount[] checking=accInfo.getCheckingAccounts();
-					for(int j=0;j<numOfCheckings;j++) {
-						wr.println(checking[j].writeToString());
-					}
-				}
-				int numOfSavings = accInfo.getNumberOfSavingsAccounts();
-				wr.println(numOfSavings);
-				if(numOfSavings!=0) {
-					SavingsAccount[] savings=accInfo.getSavingsAccounts();
-					for(int j=0;j<numOfSavings;j++) {
-						wr.println(savings[j].writeToString());
-					}
-				}
-				int numOfCD = accInfo.getNumberOfCDAccounts();
-				wr.println(numOfCD);
-				if(numOfCD!=0) {
-					CDAccount[] cd=accInfo.getCDAccounts();
-					for(int j=0;j<numOfSavings;j++) {
-						wr.println(cd[j].writeToString());
-					}
-				}	
-			}
-			wr.close();
-			return true;
-		} catch (IOException e) {
-			return false;
+		
+		// if amount < 0
+		if (transaction.getAmount() < 0) {
+			throw new NegativeAmountException();
 		}
+		
+		// deposit transaction
+		if (transaction instanceof DepositTransaction) {
+			
+			// deposit money into account
+			target.deposit(amount);
+			
+			// add transaction record
+			target.addTransaction(transaction);
+		} else if (transaction instanceof WithdrawTransaction) {
+			// if withdraw amount larger than balance
+			if (transaction.getAmount() + transaction.getTargetAccount().getBalance() < 0 ) {
+				throw new ExceedsAvailableBalanceException();
+			}
+			
+			// withdraw money
+			target.withdraw(amount);
+			
+			// add transaction record
+			transaction.getTargetAccount().addTransaction(transaction);
+		} else if (transaction instanceof TransferTransaction) {
+			// if transfer money more than source account balance
+			if (source.getBalance() - amount  < 0) {
+				throw new ExceedsAvailableBalanceException();
+			}
+			
+			// withdraw money from source account
+			source.withdraw(amount);
+			
+			// deposit money to target account
+			target.deposit(amount);
+			
+			// add transaction record to both accounts
+			transaction.getSourceAccount().addTransaction(transaction);
+			transaction.getTargetAccount().addTransaction(transaction);
+		}
+		
+		return true;
 	}
-	
-	public static AccountHolder[] sortAccountHolders() {
-		Collections.sort(accHolderList);											//Collections.sort(list) returns a void,and cannot be stored to any variable,the list itself is sorted 
-		return accHolderList.toArray(new AccountHolder[0]);							//then to convert to array, separately use, list.toArray, 
-																					//*Collections.sort(list).toArray()* will not work, it's an error.
-	}
-	
-	public static ArrayList<AccountHolder> accHolderList = new ArrayList<AccountHolder>();
-	private static long nextAccNumber=1;
-	private static CDOffering[] offerings;
-	
-	private static List<CDOffering> offeringsList = new ArrayList<>();
-	
-	public static void addCDOffering(CDOffering cdo) {
-		offeringsList.add(cdo);
-	}
-	
-	public static List<CDOffering> getCDOffering() {
-		return offeringsList;
-	}
-	
 }

@@ -1,132 +1,116 @@
-//package com.example.Assignment_6.models;
+package com.example.Assignment_6.models;
 
-//import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.text.*;
+import java.util.*;
 
-import javax.swing.text.DateFormatter;
+public abstract class Transaction {
 
-//public abstract class Transaction {
-//
-//	BankAccount account;
-//	BankAccount targetAccount;
-//	BankAccount sourceAccount;
-//	double amount;
-//	Date date;
-//	boolean isProcessed = false;
-//	String rejectionReason;
-//
-//	// --------------SourceAccount----------\\
-//	public BankAccount getSourceAccount() {
-//		return sourceAccount;
-//
-//	}
-//
-//	public void setSourceAccount(BankAccount sourceAccount) {
-//		this.sourceAccount = sourceAccount;
-//	}
-//
-//	// --------------TargetAccount----------\\
-//	public BankAccount getTargetAccount() {
-//		return targetAccount;
-//
-//	}
-//
-//	public void setTargetAccount(BankAccount targetAccount) {
-//		this.targetAccount = targetAccount;
-//	}
-//
-//	// --------------AMOUNT----------\\
-//	public double getAmount() {
-//		return this.amount;
-//
-//	}
-//
-//	public void setAmount(double amount) {
-//		this.amount = amount;
-//	}
-//
-//	// --------------DATE----------\\
-//	public java.util.Date getTransactionDate() {
-//		return date;
-//	}
-//
-//	public void setTransactionDate(Date date) {
-//		this.date = date;
-//	}
-//	// --------------WRITE TO STRING METHOD----------\\
-////	public String writeToString() {
-////		SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-////		StringBuilder toString = new StringBuilder();
-////		
-////		if(account == null) {
-////			toString.append(-1);
-////		}else {
-////			toString.append(account.getAccountNumber());
-////		}
-////		toString.append(",");
-////		toString.append(targetAccount.getAccountNumber());
-////		toString.append(",");
-////		toString.append(amount);
-////		toString.append(",");
-////		toString.append(dateFormat.format(date));
-////		return toString.toString();
-////	}	
-//
-//	public String writeToString() {
-//		System.out.println("TRANSACTION TESTING - WRITE TO STRING - target, source, amount, date");
-//
-//		return "TARGET ACCOUNT MUNBER : " + this.targetAccount + "," + "SOURCE ACCOUNT NUMBER: " + this.sourceAccount
-//				+ "," + "AMOUNT: " + this.amount + "DATE: " + this.date;
-//	}
-//
-//	// --------------READ FROM STRING METHOD----------\\
-//	public static Transaction readFromString(String transactionDate) {
-//		String[] trans = transactionDate.split(",");
-//		SimpleDateFormat dateFormater = new SimpleDateFormat("dd/MM/yyyy");
-//
-//		try {
-//			long targetAccount = Long.parseLong(trans[0]);
-//			long sourceAccount = Long.parseLong(trans[1]);
-//			double amount = Double.parseDouble(trans[2]);
-//			Date date = dateFormater.parse(trans[3]);
-//
-//			if (targetAccount == -1) {
-//				if (amount < 0) {
-//					WithdrawTransaction newTransaction = new WithdrawTransaction(
-//							MeritBank.getBankAccount(sourceAccount), amount);
-//					return newTransaction;
-//				}
-//				DepositTransaction newTRansaction = new DepositTransaction(MeritBank.getBankAccount(sourceAccount),
-//						amount);
-//				return newTRansaction;
-//			}
-//			TransferTransaction newTrans = new TransferTransaction(MeritBank.getBankAccount(sourceAccount),
-//					MeritBank.getBankAccount(targetAccount), amount);
-//			return newTrans;
-//		} catch (ParseException e) {
-//			return null;
-//		}
-//	}
-//
-//	public abstract void process()
-//			throws NegativeAmountException, ExceedsAvailableBalanceException, ExceedsFraudSuspicionLimitException;
-//
-//	public boolean isProcessedByFraudTeam() {
-//		return isProcessed;
-//	}
-//
-//	public void setProcessedByFraudTeam(boolean isProcessed) {
-//		this.isProcessed = isProcessed;
-//
-//	}
-//
-//	public String getRejectionReason() {
-//		return rejectionReason;
-//	}
-//
-//	public void setRejectionReason(String rejectionReason) {
-//		this.rejectionReason = rejectionReason;
-//	}
-//
-//}
+	private BankAccount sourceAccount;
+	private BankAccount targetAccount;
+	private double amount;
+	private Date date;
+	
+	public Transaction() {
+		
+	}
+	
+	public Transaction(BankAccount sourceAccount, BankAccount targetAccount, double amount, Date date) {
+		this.sourceAccount = sourceAccount;
+		this.targetAccount = targetAccount;
+		this.amount = amount;
+		this.setTransactionDate(date);
+	}
+	
+	public Transaction(BankAccount targetAccount, double amount, Date date) {
+		this(null, targetAccount, amount, date);
+	}
+	                   
+	public BankAccount getSourceAccount() {
+		return this.sourceAccount;
+	}
+	public void setSourceAccount(BankAccount account) {
+		this.sourceAccount = account;
+	}
+	public BankAccount getTargetAccount() {
+		return this.targetAccount;
+	}
+	public void setTargetAccount(BankAccount account) {
+		this.targetAccount = account;
+	}
+	public double getAmount() {
+		return this.amount;
+	}
+	
+	public void setAmount(double amount) {
+		this.amount = amount;
+	}
+	
+	public java.util.Date getTransactionDate() {
+		return this.date;
+	}
+	public void setTransactionDate(java.util.Date date) {
+		this.date = date;
+	}
+	
+	public String  writeToString() {
+		String sourceAccNumb = sourceAccount != null ? String.valueOf(this.sourceAccount.getAccountNumber()) : "-1";
+		String targetAccNumb = String.valueOf(this.targetAccount.getAccountNumber());
+		String amount = String.valueOf(this.amount);
+		String date = MeritBank.formatDate(this.date);
+		
+		if (this instanceof WithdrawTransaction) {
+			amount = "-" + amount;
+		}
+		
+		String data = sourceAccNumb + "," + targetAccNumb + "," + amount + "," + date + "\n";
+		
+		return data;
+	};
+	
+	// -1,2,5000,01/02/2020
+	public static Transaction readFromString(String transactionDataString) throws ParseException {
+		String[] data = transactionDataString.split(",");
+		long sourceID = Long.valueOf(data[0]);
+		long targetID = Long.valueOf(data[1]);
+		double amount = Double.valueOf(data[2]);
+		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");	// Create a date formatter
+		Date date = formatter.parse(data[3]);
+		
+		BankAccount sourceAcc;
+		BankAccount targetAcc = MeritBank.findAccount(targetID);
+		Transaction tran = null;
+		
+		
+		
+		// if this is not a transfer transaction
+		if (data[0].equals("-1")) {
+			// if found that account
+			if (targetAcc != null) {
+				if (amount > 0) {
+					tran = new DepositTransaction(targetAcc, amount, date);
+					return tran;
+				} else {
+					tran = new WithdrawTransaction(targetAcc, 0 - amount, date);
+					return tran;
+				}
+			}
+		} else {
+			sourceAcc = MeritBank.findAccount(sourceID);
+			if (sourceAcc != null) {
+				tran = new TransferTransaction(sourceAcc, targetAcc, amount, date);
+				
+			}
+		}
+		
+		return tran;
+	}
+
+	@Override
+	public String toString() {
+		return "Account number is: " + targetAccount.getAccountNumber() + " " + this.amount;
+	}
+	
+	
+	
+}
+

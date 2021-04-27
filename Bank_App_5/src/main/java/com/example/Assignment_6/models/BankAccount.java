@@ -15,6 +15,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
+import javax.validation.constraints.DecimalMax;
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -23,9 +26,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @MappedSuperclass
 @Table(name = "BankAccount")
-@JsonIgnoreProperties(value = {"Transactions"})
+@JsonIgnoreProperties(value = {"transaction"})
 public class BankAccount {
-	
+
+	// member variables of BankAccount class
 	protected long accountNumber;
 	private double balance;
 	@NotNull
