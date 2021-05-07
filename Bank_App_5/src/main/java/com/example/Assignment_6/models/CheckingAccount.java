@@ -6,11 +6,19 @@ import java.util.Date;
 import java.util.StringTokenizer;
 
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.validation.constraints.DecimalMax;
 import javax.validation.constraints.DecimalMin;
 
 @Entity
 public class CheckingAccount extends BankAccount {
+	
+//	@Id
+//	@GeneratedValue(strategy = GenerationType.AUTO)
+//	//@Column(name = "user_id")
+//	private long id;
 	
 	private static double interest_rate = 0.0001;
 	

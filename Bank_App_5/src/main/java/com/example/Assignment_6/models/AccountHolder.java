@@ -7,10 +7,10 @@ import java.util.List;
 
 import javax.persistence.*;
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,18 +19,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import javax.persistence.Id;
 
 import com.example.Assignment_6.exceptions.*;
 
 @Entity
 @Table(name = "accountHolder")
-@RestController()
-@RequestMapping("AccountHolder")
 public class AccountHolder implements Comparable<AccountHolder>{
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	@Column(name = "user_id")
-	private static long id;
+	//@Column(name = "user_id")
+	private long id;
 
 	@NotBlank(message = "First Name is required")
 	private String firstName;
@@ -44,17 +43,17 @@ public class AccountHolder implements Comparable<AccountHolder>{
 	@NotBlank(message = "SSN is required")
 	private String ssn;
 
-	@OneToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "user_id", referencedColumnName = "id")
+	@OneToOne(fetch = FetchType.LAZY, mappedBy = "accountHolder")
+//	@JoinColumn(name = "user_id", referencedColumnName = "id")
 	private AccountHolderContactInfo accountHolderDataContactInfo;
 
-	@OneToMany(cascade = CascadeType.ALL)
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "accountHolders")
 	private List<CheckingAccount> checkingAccounts;
 
-	@OneToMany(cascade = CascadeType.ALL)
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "accountHolders")
 	private List<SavingsAccount> savingsAccounts;
 
-	@OneToMany(cascade = CascadeType.ALL)
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "accountHolders")
 	private List<CDAccount> CDAccounts;	
 	
 // Declare a class that implements an interface 
@@ -92,8 +91,8 @@ public class AccountHolder implements Comparable<AccountHolder>{
 	    }
 	    
 	    public AccountHolder (){	
-	    	this.id = AccountHolder.id;
-	    	AccountHolder.id++;
+//	    	this.id = AccountHolder.id;
+//	    	AccountHolder.id++;
 	    	// instantiate array of Checking
 	        this.checkingAccounts = new ArrayList<>();
 	        this.savingsAccounts = new ArrayList<>();
@@ -116,7 +115,7 @@ public class AccountHolder implements Comparable<AccountHolder>{
 				return false;
 			}
 			if (getCheckingBalance() + getSavingsBalance() + checkingAccount.getBalance() >= 250000) {
-				throw new ExceedsCombinedBalanceLimitException();
+				throw new ExceedsCombinedBalanceLimitException("This Balance is over the combined limit");
 			}
 			checkingAccounts.add(checkingAccount);
 			checkingAccount.setAccountNumber(this.id);
@@ -148,7 +147,7 @@ public class AccountHolder implements Comparable<AccountHolder>{
 				return false;
 			}
 			if (getCheckingBalance() + getSavingsBalance() + savingsAccount.getBalance() >= 250000) {
-				throw new ExceedsCombinedBalanceLimitException();
+				throw new ExceedsCombinedBalanceLimitException("This Balance is over the combined limit");
 			}
 			savingsAccounts.add(savingsAccount);
 			savingsAccount.setAccountNumber(this.id);
@@ -211,7 +210,7 @@ public class AccountHolder implements Comparable<AccountHolder>{
 	    		return true;
 	    	} else {
 	    		System.out.println("Total is over 250,000. Can not open a new account");
-	    		throw new ExceedsCombinedBalanceLimitException();
+	    		throw new ExceedsCombinedBalanceLimitException("This Balance is over the combined limit");
 	    	}
 	    }
 

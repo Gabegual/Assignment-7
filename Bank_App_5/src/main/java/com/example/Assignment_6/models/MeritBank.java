@@ -14,6 +14,7 @@ import java.util.*;
 
 import com.example.Assignment_6.exceptions.ExceedsAvailableBalanceException;
 import com.example.Assignment_6.exceptions.ExceedsFraudSuspicionLimitException;
+import com.example.Assignment_6.exceptions.NegativeAmountException;
 
 public class MeritBank {
 	
@@ -22,7 +23,7 @@ public class MeritBank {
 	private static List<CDOffering> cdOfferings = new ArrayList<>();
 	
 	private static int numbOfAccountHolder = 0;
-	public static FraudQueue fraudQueue = new FraudQueue();
+	//public static FraudQueue fraudQueue = new FraudQueue();
 	
 	public static void addAccountHolder(AccountHolder accountHolder) {
 		accountHolders.add(accountHolder);
@@ -85,39 +86,41 @@ public class MeritBank {
 	        return String.format("%s",d);
 	}
 	
-	private static void readFraudQueue(BufferedReader reader) throws IOException, ParseException {
-		int pendingNum = Integer.parseInt(reader.readLine());
+//	private static void readFraudQueue(BufferedReader reader) throws IOException, ParseException {
+//		int pendingNum = Integer.parseInt(reader.readLine());
+//	
+//		for (int i= 0; i < pendingNum; i++) {
+//			MeritBank.fraudQueue.addTransaction(readTransactionType(reader.readLine()));
+//		}
+//	}
 	
-		for (int i= 0; i < pendingNum; i++) {
-			MeritBank.fraudQueue.addTransaction(readTransactionType(reader.readLine()));
-		}
-	}
-	
-	private static Transaction readTransactionType(String line) throws ParseException {
-		String[] datas = line.split(",");
-		
-		// Create a date formatter
-		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-		
-		int sourceID = Integer.parseInt(datas[0]);
-		int targetID = Integer.parseInt(datas[1]);
-		BankAccount targetAcc = MeritBank.findAccount(targetID);
-		double amount = Integer.parseInt(datas[2]);
-		Date date = formatter.parse(datas[3]);
-		
-		// if this is not a transfer transaction
-		if (sourceID != -1) {
-			if (amount >= 0) {
-				return new DepositTransaction(targetAcc, amount, date);
-			} else {
-				return new WithdrawTransaction(targetAcc, amount, date);
-			}
-		} else {
-			// if this is a transfer transaction
-			BankAccount sourceAcc = MeritBank.findAccount(sourceID);
-			return new TransferTransaction(sourceAcc, targetAcc, amount, date);
-		}
-	}
+	//---TODO--FIX THIS DUDE--------\\
+//	private static Transaction readTransactionType(String line) throws ParseException {
+//		String[] datas = line.split(",");
+//		
+//		// Create a date formatter
+//		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+//		
+//		int sourceID = Integer.parseInt(datas[0]);
+//		int targetID = Integer.parseInt(datas[1]);
+//		BankAccount targetAcc = MeritBank.findAccount(targetID);
+//		double amount = Integer.parseInt(datas[2]);
+//		Date date = formatter.parse(datas[3]);
+//		
+//		// if this is not a transfer transaction
+//		if (sourceID != -1) {
+//			if (amount >= 0) {
+//				//return new DepositTransaction(targetAcc, amount, date);
+//			} else {
+//				//return new WithdrawTransaction(targetAcc, amount, date);
+//			}
+//		} else {
+//			// if this is a transfer transaction
+//			BankAccount sourceAcc = MeritBank.findAccount(sourceID);
+//			//return new TransferTransaction(sourceAcc, targetAcc, amount, date);
+//		}
+//		return null;
+//	}
 	
 	private static void readTransactions(BufferedReader reader, BankAccount acc) throws IOException, ParseException, 
 	  ExceedsFraudSuspicionLimitException, NegativeAmountException, ExceedsAvailableBalanceException {
@@ -138,16 +141,17 @@ public class MeritBank {
 			// if this is not a transfer transaction
 			if (sourceID != -1) {
 				if (amount >= 0) {
-					acc.addTransaction(new DepositTransaction(acc, amount, date));
+					//acc.addTransaction(new DepositTransaction(acc, amount, date));
 				} else {
-					acc.addTransaction(new WithdrawTransaction(acc, amount, date));
+					//acc.addTransaction(new WithdrawTransaction(acc, amount, date));
 				}
 			} else {
 				// if this is a transfer transaction
 				BankAccount sourceAcc = MeritBank.findAccount(sourceID);
-				acc.addTransaction(new TransferTransaction(sourceAcc, acc, amount, date));
+				//acc.addTransaction(new TransferTransaction(sourceAcc, acc, amount, date));
 			}
 		}
+		
 	}
 	
 	private static String addSavingData(AccountHolder acc) {
@@ -163,7 +167,7 @@ public class MeritBank {
 			// increase number of checking
 			numbOfSavings++;
 			
-			data.append(account.writeToString() + "\n");
+			//data.append(account.writeToString() + "\n");
 		}
 		
 		return numbOfSavings + "\n" + data.toString();
@@ -201,7 +205,7 @@ public class MeritBank {
 			// increase num of checking
 			numbOfCDs++;
 			
-			data.append(account.writeToString() + "\n");
+			//data.append(account.writeToString() + "\n");
 		}
 		
 		return numbOfCDs + "\n" + data.toString();
@@ -223,7 +227,7 @@ public class MeritBank {
 			// increase num of checking
 			numbOfCheckings++;
 			
-			data.append(account.writeToString() + "\n");
+			//data.append(account.writeToString() + "\n");
 		}
 		
 		return numbOfCheckings + "\n" + data.toString();
@@ -333,59 +337,60 @@ public class MeritBank {
 	
 	// add transaction to an account
 	// -- needed to be fixed, use instanceof, calling bankaccount.withdraw, deposit..etc
-	public static boolean processTransaction(Transaction transaction) throws NegativeAmountException, ExceedsFraudSuspicionLimitException, 
-	ExceedsAvailableBalanceException {
-		double amount = transaction.getAmount();
-		BankAccount source = transaction.getSourceAccount();
-		BankAccount target = transaction.getTargetAccount();
-		
-		// if amount > 1000, add to fraud queue
-		if (Math.abs(transaction.getAmount()) > 1000) {
-			MeritBank.fraudQueue.addTransaction(transaction);
-			throw new ExceedsFraudSuspicionLimitException();
-		}
-		
-		// if amount < 0
-		if (transaction.getAmount() < 0) {
-			throw new NegativeAmountException();
-		}
-		
-		// deposit transaction
-		if (transaction instanceof DepositTransaction) {
-			
-			// deposit money into account
-			target.deposit(amount);
-			
-			// add transaction record
-			target.addTransaction(transaction);
-		} else if (transaction instanceof WithdrawTransaction) {
-			// if withdraw amount larger than balance
-			if (transaction.getAmount() + transaction.getTargetAccount().getBalance() < 0 ) {
-				throw new ExceedsAvailableBalanceException();
-			}
-			
-			// withdraw money
-			target.withdraw(amount);
-			
-			// add transaction record
-			transaction.getTargetAccount().addTransaction(transaction);
-		} else if (transaction instanceof TransferTransaction) {
-			// if transfer money more than source account balance
-			if (source.getBalance() - amount  < 0) {
-				throw new ExceedsAvailableBalanceException();
-			}
-			
-			// withdraw money from source account
-			source.withdraw(amount);
-			
-			// deposit money to target account
-			target.deposit(amount);
-			
-			// add transaction record to both accounts
-			transaction.getSourceAccount().addTransaction(transaction);
-			transaction.getTargetAccount().addTransaction(transaction);
-		}
-		
-		return true;
-	}
+	//-----TODO---- fix MAKE NOT UGLY---\\
+//	public static boolean processTransaction(Transaction transaction) throws NegativeAmountException, ExceedsFraudSuspicionLimitException, 
+//	ExceedsAvailableBalanceException {
+//		double amount = transaction.getAmount();
+//		BankAccount source = transaction.getSourceAccount();
+//		BankAccount target = transaction.getTargetAccount();
+//		
+//		// if amount > 1000, add to fraud queue
+//		if (Math.abs(transaction.getAmount()) > 1000) {
+//			//MeritBank.fraudQueue.addTransaction(transaction);
+//			//throw new ExceedsFraudSuspicionLimitException();
+//		}
+//		
+//		// if amount < 0
+//		if (transaction.getAmount() < 0) {
+//			throw new NegativeAmountException();
+//		}
+//		
+//		// deposit transaction
+////		if (transaction instanceof DepositTransaction) {
+////			
+////			// deposit money into account
+////			target.deposit(amount);
+////			
+////			// add transaction record
+////			target.addTransaction(transaction);
+////		} else if (transaction instanceof WithdrawTransaction) {
+////			// if withdraw amount larger than balance
+////			if (transaction.getAmount() + transaction.getTargetAccount().getBalance() < 0 ) {
+////				throw new ExceedsAvailableBalanceException();
+////			}
+////			
+////			// withdraw money
+////			target.withdraw(amount);
+////			
+////			// add transaction record
+////			transaction.getTargetAccount().addTransaction(transaction);
+////		} else if (transaction instanceof TransferTransaction) {
+////			// if transfer money more than source account balance
+////			if (source.getBalance() - amount  < 0) {
+////				throw new ExceedsAvailableBalanceException();
+////			}
+////			
+////			// withdraw money from source account
+////			source.withdraw(amount);
+////			
+////			// deposit money to target account
+////			target.deposit(amount);
+////			
+////			// add transaction record to both accounts
+////			transaction.getSourceAccount().addTransaction(transaction);
+////			transaction.getTargetAccount().addTransaction(transaction);
+////		}
+//		
+//		return true;
+//	}
 }
