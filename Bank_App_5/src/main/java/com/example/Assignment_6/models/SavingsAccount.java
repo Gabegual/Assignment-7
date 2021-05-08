@@ -8,11 +8,19 @@ import java.util.Date;
 import java.util.StringTokenizer;
 
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.validation.constraints.DecimalMax;
 import javax.validation.constraints.DecimalMin;
 
 @Entity
 public class SavingsAccount extends BankAccount {
+	
+//	@Id
+//	@GeneratedValue(strategy = GenerationType.AUTO)
+//	//@Column(name = "user_id")
+//	private long id;
 	
 		private static double INTEREST_RATE = 0.01;
 		SavingsAccount(double balance, double interestRate){

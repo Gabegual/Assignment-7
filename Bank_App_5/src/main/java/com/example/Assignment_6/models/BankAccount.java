@@ -11,6 +11,10 @@ import java.util.StringTokenizer;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
@@ -27,7 +31,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @MappedSuperclass
 @Table(name = "BankAccount")
 @JsonIgnoreProperties(value = {"transaction"})
-public class BankAccount {
+public abstract class BankAccount {
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	//@Column(name = "user_id")
+	private long id;
 
 	// member variables of BankAccount class
 	protected long accountNumber;
@@ -35,17 +44,17 @@ public class BankAccount {
 	@NotNull
 	private double interestRate;
 	private Date openDate;
-	private List<Transaction> transactions;
+	//private List<Transaction> transactions;
 	
-	@ManyToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "ah_ID", referencedColumnName = "ah_ID")
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "ah_ID")
 	private AccountHolder accountHolders; 
 
-	@Column(name = "ah_ID")
-	private long ahID;
+//	@Column(name = "ah_ID")
+//	private long ahID;
 	// independent constructor
 	public BankAccount() {
-		this.transactions = new ArrayList<>();
+		//this.transactions = new ArrayList<>();
 		this.openDate = new Date();
 		this.accountNumber = MeritBank.getNextAccountNumber();
 	}
@@ -69,29 +78,29 @@ public class BankAccount {
 		this.interestRate = interestRate;
 		this.openDate = accountOpenedOn;
 		
-		transactions = new ArrayList<>();
+		//transactions = new ArrayList<>();
 	}
 	
 	// don't know the purpose of using BankAccount static readFromString
-	public static BankAccount readFromString(String accountData) throws ParseException {
-		String[] data = accountData.split(",");
-		
-		// Create a date formatter
-		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-		int accNumb = Integer.parseInt(data[0]);
-		double balance = Double.parseDouble(data[1]);
-		double interestRate = Double.parseDouble(data[2]);
-		Date openDate = formatter.parse(data[3]);	// parse the date into date object
-	    
-	    return new BankAccount(accNumb, balance, interestRate, openDate);
-	}
+//	public static BankAccount readFromString(String accountData) throws ParseException {
+//		String[] data = accountData.split(",");
+//		
+//		// Create a date formatter
+//		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+//		int accNumb = Integer.parseInt(data[0]);
+//		double balance = Double.parseDouble(data[1]);
+//		double interestRate = Double.parseDouble(data[2]);
+//		Date openDate = formatter.parse(data[3]);	// parse the date into date object
+//	    
+//	    return new BankAccount(accNumb, balance, interestRate, openDate);
+//	}
 	
-	public String writeToString() {
-		DecimalFormat df = new DecimalFormat("#.####");
-		String data = this.getAccountNumber() + "," + df.format(this.getBalance()) + "," 
-				+ df.format(this.getInterestRate()) + "," + MeritBank.formatDate(this.getOpenedOn());
-		return data;
-	}
+//	public String writeToString() {
+//		DecimalFormat df = new DecimalFormat("#.####");
+//		String data = this.getAccountNumber() + "," + df.format(this.getBalance()) + "," 
+//				+ df.format(this.getInterestRate()) + "," + MeritBank.formatDate(this.getOpenedOn());
+//		return data;
+//	}
 	
 	public boolean withdraw(double amount) {
 		if (amount <= 0) {
@@ -121,16 +130,16 @@ public class BankAccount {
 		
 		return futureVal;
 	}
+	//---TODO----FIX METHOD TRANSACTION----\\
+//	public void addTransaction(Transaction tran){
+//		System.out.println("Transaction thing");
+//		System.out.println(tran);
+//		transactions.add(tran);
+//	}
 	
-	public void addTransaction(Transaction tran){
-		System.out.println("Transaction thing");
-		System.out.println(tran);
-		transactions.add(tran);
-	}
-	
-	public List<Transaction> getTransactions() {
-		return this.transactions;
-	}
+//	public List<Transaction> getTransactions() {
+//		return this.transactions;
+//	}
 	
 	public long getAccountNumber() {
 		return this.accountNumber;

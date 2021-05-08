@@ -1,13 +1,25 @@
 package com.example.Assignment_6.models;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.validation.constraints.DecimalMax;
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
+@Entity
+@Table(name = "CDOffering")
+
 public class CDOffering {
-	
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	//@Column(name = "user_id")
+	private long id;
+
 	@NotNull
 	@Min(value = 1, message = " term must be >")
 	private int term;

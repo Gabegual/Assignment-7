@@ -29,7 +29,12 @@ public class CentralController {
 	@RequestMapping("/") //This is an "annotation".
 	@ResponseBody
 	public String Welcome() {
-		return "Welcome to Merit Bank !";
+		return ("<h1>Welcome to Merit Bank ! </h1>");
+	}
+	
+	@GetMapping("/admin")
+	public String admin() {
+		return ("<h1>Welcome Admin Sir OwO </h1>");
 	}
 	
 	@PostMapping(value = "/AccountHolders") 
