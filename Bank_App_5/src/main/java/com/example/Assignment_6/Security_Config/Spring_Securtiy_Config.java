@@ -27,9 +27,10 @@ public class Spring_Securtiy_Config extends WebSecurityConfigurerAdapter{
 	@Bean
 	public PasswordEncoder getPasswordEncodder() { return NoOpPasswordEncoder.getInstance();
 		
-	@Override
-	protected void Configure(HttpSecurity http) throws Exception {
-		
-	
-	}
+	//@Override
+//	protected void Configure(HttpSecurity http) throws Exception {
+//		
+//	
+//	}
+}
 }
