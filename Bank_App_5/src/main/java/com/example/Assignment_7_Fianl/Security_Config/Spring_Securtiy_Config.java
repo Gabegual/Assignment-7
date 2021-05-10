@@ -26,16 +26,21 @@ public class Spring_Securtiy_Config extends WebSecurityConfigurerAdapter{
 		
 	}
 	
+
+	@Bean
+	public PasswordEncoder getPasswordEncodder() { return NoOpPasswordEncoder.getInstance();
+		
+	}	
+	
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		http
 	    .authorizeRequests()
-	    .antMatchers("/Welcome").permitAll()
-	    .anyRequest().authenticated();
-	
-	}
-	@Bean
-	public PasswordEncoder getPasswordEncodder() { return NoOpPasswordEncoder.getInstance();
+	    .antMatchers("/").authenticated()
+	    .antMatchers("/user/**").hasRole("User")
+	    .antMatchers("/admin/**").hasRole("Admin")
+		.and().formLogin();
+		
 		
 	}
 }
