@@ -29,16 +29,9 @@ public class Spring_Securtiy_Config extends WebSecurityConfigurerAdapter {
 //		.password("Password1")
 //		.roles("Admin");
 
-		auth.jdbcAuthentication().dataSource(dataSource).withDefaultSchema()
-				.withUser(User.withUsername("user")
-						.password("pass")
-						.roles("User"))
-
-				.withUser(User.withUsername("admin")
-						.password("pass")
-						.roles("Admin")
-
-				);
+		auth.jdbcAuthentication()
+		.dataSource(dataSource);
+			
 
 	}
 
@@ -50,8 +43,11 @@ public class Spring_Securtiy_Config extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http.authorizeRequests().antMatchers("/").authenticated().antMatchers("/user/**").hasAnyRole("Admin", "User")
-				.antMatchers("/admin/**").hasRole("Admin").and().formLogin();
+		http.authorizeRequests()
+			.antMatchers("/").authenticated()
+			.antMatchers("/user/**").hasAnyRole("Admin", "User")
+			.antMatchers("/admin/**").hasRole("Admin")
+			.and().formLogin();
 
 	}
 }
