@@ -28,17 +28,28 @@ public class CentralController {
 	@RequestMapping("/") // This is an "annotation".
 	@ResponseBody
 	public String Welcome() {
-		return ("Welcome to Merit Bank !");
+		return ("<h1> Welcome to Merit Bank ! </h1>");
 	}
 
 	@GetMapping("/user")
 	public String user() {
-		return ("Welcome User UwU");
+		return ("<p> Welcome User UwU "
+				+ " \r\n"
+				+ "██╗░░░██╗░██╗░░░░░░░██╗██╗░░░██╗\r\n"
+				+ "██║░░░██║░██║░░██╗░░██║██║░░░██║\r\n"
+				+ "██║░░░██║░╚██╗████╗██╔╝██║░░░██║\r\n"
+				+ "██║░░░██║░░████╔═████║░██║░░░██║\r\n"
+				+ "╚██████╔╝░░╚██╔╝░╚██╔╝░╚██████╔╝\r\n"
+				+ "░╚═════╝░░░░╚═╝░░░╚═╝░░░╚═════╝░</p>");
 	}
 
 	@GetMapping("/admin")
 	public String admin() {
-		return ("Welcome Admin Sir OwO");
+		return ("Welcome Admin Sir OwO"
+				+ "\r\n"
+				+ "░█▀▀▀█ █───█ ░█▀▀▀█ \r\n"
+				+ "░█──░█ █▄█▄█ ░█──░█ \r\n"
+				+ "░█▄▄▄█ ─▀─▀─ ░█▄▄▄█");
 	}
 
 	@PostMapping(value = "/admin/AccountHolders")
