@@ -33,23 +33,12 @@ public class CentralController {
 
 	@GetMapping("/user")
 	public String user() {
-		return (" Welcome User UwU "
-				+ " \r\n"
-				+ "██╗░░░██╗░██╗░░░░░░░██╗██╗░░░██╗\r\n"
-				+ "██║░░░██║░██║░░██╗░░██║██║░░░██║\r\n"
-				+ "██║░░░██║░╚██╗████╗██╔╝██║░░░██║\r\n"
-				+ "██║░░░██║░░████╔═████║░██║░░░██║\r\n"
-				+ "╚██████╔╝░░╚██╔╝░╚██╔╝░╚██████╔╝\r\n"
-				+ "░╚═════╝░░░░╚═╝░░░╚═╝░░░╚═════╝░");
+		return ("<h1> Welcome User UwU </h1>");
 	}
 
 	@GetMapping("/admin")
 	public String admin() {
-		return ("Welcome Admin Sir OwO"
-				+ "\r\n"
-				+ "░█▀▀▀█ █───█ ░█▀▀▀█ \r\n"
-				+ "░█──░█ █▄█▄█ ░█──░█ \r\n"
-				+ "░█▄▄▄█ ─▀─▀─ ░█▄▄▄█");
+		return ("<h1> Welcome Admin Sir OwO </h1>");
 	}
 
 	@PostMapping(value = "/admin/AccountHolders")
