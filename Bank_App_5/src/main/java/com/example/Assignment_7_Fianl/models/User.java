@@ -1,4 +1,4 @@
-package com.example.Assignment_7_Fianl.Security_Config;
+package com.example.Assignment_7_Fianl.models;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
